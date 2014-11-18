@@ -13,7 +13,7 @@ func (m *mint) inc() {
 	}
 }
 
-func (m *mint) val() {
+func (m *mint) val() int {
 	return m.int
 }
 

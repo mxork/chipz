@@ -16,7 +16,9 @@ const (
 )
 
 // 12th root of 2
-var root12 tf = tf(math.Pow(2, 1.0/12))
+const root12 = 1.0594630943592953
+
+//var root12 tf = tf(math.Pow(2, 1.0/12))
 
 func (f freq) sharp() freq {
 	return f * root12
@@ -30,7 +32,7 @@ func (f freq) flat() freq {
 //
 // Implemenataion uses iterated mult/division, as
 // for small integer n, it is probably faster than math.Pow
-func (f freq) shift(n int) freq {
+func (f freq) shift(n semi) freq {
 	of := f
 	switch {
 	case n > 0:

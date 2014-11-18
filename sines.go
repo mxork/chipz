@@ -24,17 +24,34 @@ type playableSample struct {
 	sample
 }
 
-func (s *playableSample) play(buf []tf) (n int) {
+func (s *playableSample) play(buf []tf) {
 	for i := range buf {
 		buf[i] = s.sample[s.val()]
 		s.inc()
 	}
-	return len(buf) // will always be satisfied
 }
 
 // àla io.Reader/Writer, but for tf, and there
 // aren't any meaningful errors. See `playableSample`
 // for the canonical example
+//
+// TODO players are assumed responsible, and should do
+// something (even zero) the entire buffer they are given.
 type player interface {
-	play([]tf) int
+	play([]tf)
+}
+
+type stereoplayer interface {
+	stereoplay([]tf, []tf)
+}
+
+type monoToStereo struct {
+	player
+}
+
+func (p player) stereoplay(l, r []tf) {
+	p.play(l)
+	for i := range r {
+		r[i] = l[i]
+	}
 }
