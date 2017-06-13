@@ -1,49 +1,55 @@
 package main
 
-// mixer takes several players and mixes them into a single output
-type mixer interface {
-	register(player)
-	player
+// mixers are non-leafs in the play tree
+
+// addMixer is a simple mixer that mixes by simply adding the signals together
+type addMixer struct {
+	players []player // children
+	buf     []tf     // buffer for intermediate operations
 }
 
-// addmixer is a simple mixer that mixes by simply adding the signals together
-type addmixer struct {
-	players []player
-	scratch []tf
-}
+// implements player
+func (m addMixer) play(out []tf) {
+	for j := 0; j < len(out); j += len(m.buf) {
+		n := max(len(out[j:]), len(m.buf))
 
-func (m *addmixer) register(p player) {
-	m.players = append(m.players, p)
-}
+		subbuf := m.buf[:n]
+		subout := out[j : j+n]
 
-func (m *addmixer) play(out []tf) {
-	// admittedly, some slice magic going on here.
-	// summary: slicing should just ensure that
-	// the scratch space and the chunk of the output
-	// being worked on are aligned, and of the same size.
+		for _, p := range m.players {
+			p.play(subbuf)
 
-	for j := 0; j < len(out); j += n {
-		n := max(len(out[j:]), len(m.scratch))
-
-		schunk := m.scratch[:n]
-		ochunk := out[j : j+n]
-
-		for _, p := range players {
-			p.play(schunk)
-
-			for i := range schunk {
-				ochunk[i] += schunk[i]
+			for i := range subbuf {
+				subout[i] += subbuf[i]
 			}
 		}
 	}
 }
 
-// locmixer is a little more sophisticated: on registration,
-// it assigns the player a polar coordinate in the plane
-// centered on the listeners head.
+// volMixer takes a linear combination of the input players
+type volMixer struct {
+	players []player // children
+	volumes []tf     // volume coefficients for i'th player
+	buf     []tf     // buffer for intermediate operations
+}
 
-// speed of sound-ish
-const SoS = 340
+// implements player
+func (m volMixer) play(out []tf) {
+	assert(len(m.players) == len(m.volumes))
 
-// head width in centimeters
-const headw = 0.20
+	for j := 0; j < len(out); j += len(m.buf) {
+		n := max(len(out[j:]), len(m.buf))
+
+		subbuf := m.buf[:n]
+		subout := out[j : j+n]
+
+		for pi, p := range m.players {
+			vol := m.volumes[pi]
+			p.play(subbuf)
+
+			for i := range subbuf {
+				subout[i] += vol * subbuf[i]
+			}
+		}
+	}
+}
