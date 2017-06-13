@@ -1,8 +1,0 @@
-Chipz
-=====
-
-A toy audio synthesizer library. A nice way to experiment with different
-designs subject to non-computery requirements (music theory). Since
-we're churning out samples real-time, the low-level control over ops and
-allocations is nice.
-
